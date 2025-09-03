@@ -60,6 +60,9 @@ export function RaceEditForm({ raceId }: RaceEditFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
+          startDate: data.startDate ? new Date(data.startDate + 'T00:00:00').toISOString() : undefined,
+          endDate: data.endDate ? new Date(data.endDate + 'T23:59:59').toISOString() : undefined,
+          registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline + 'T23:59:59').toISOString() : undefined,
           maxParticipants: data.maxParticipants ? parseInt(data.maxParticipants) : undefined
         })
       })
