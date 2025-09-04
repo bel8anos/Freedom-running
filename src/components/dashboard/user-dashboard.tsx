@@ -170,11 +170,15 @@ export function UserDashboard() {
                         {registration.raceId.location} • {format(new Date(registration.raceId.startDate), 'MMM dd, yyyy')}
                       </p>
                     </div>
-                    <Badge variant={
-                      registration.status === 'approved' ? 'default' :
-                      registration.status === 'pending' ? 'secondary' :
-                      'destructive'
-                    }>
+                    <Badge
+                      className={
+                        registration.status === 'approved'
+                          ? 'bg-green-100 text-green-800'
+                          : registration.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }
+                    >
                       {registration.status}
                     </Badge>
                   </div>

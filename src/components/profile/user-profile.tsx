@@ -286,7 +286,15 @@ export function UserProfile() {
                           </div>
                         </div>
                       </div>
-                      <Badge variant={reg.status === 'approved' ? 'default' : 'secondary'}>
+                      <Badge
+                        className={
+                          reg.status === 'approved'
+                            ? 'bg-green-100 text-green-800'
+                            : reg.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }
+                      >
                         {reg.status.charAt(0).toUpperCase() + reg.status.slice(1)}
                       </Badge>
                     </div>
