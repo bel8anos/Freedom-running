@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { RaceCard } from "@/components/race/race-card";
 import { RaceFilters } from "@/components/race/race-filters";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
@@ -43,6 +44,16 @@ export default function RacesPage() {
 
   return (
     <div className="py-8">
+      <div className="mb-8 overflow-hidden rounded-lg">
+        <Image
+          src="/epirus.jpg"
+          alt="Trail running at sunset"
+          width={1536}
+          height={512}
+          className="h-64 w-full object-cover object-[center_65%] sm:h-80 lg:h-96"
+          priority
+        />
+      </div>
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
