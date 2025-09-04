@@ -55,14 +55,24 @@ export function RaceEditForm({ raceId }: RaceEditFormProps) {
 
   const updateRaceMutation = useMutation({
     mutationFn: async (data: Partial<RaceFormData>) => {
+      const formatDateForAPI = (dateString: string) => {
+        try {
+          const date = new Date(dateString)
+          if (isNaN(date.getTime())) return undefined
+          return date.toISOString()
+        } catch {
+          return undefined
+        }
+      }
+
       const response = await fetch(`/api/races/${raceId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          startDate: data.startDate ? new Date(data.startDate + 'T00:00:00').toISOString() : undefined,
-          endDate: data.endDate ? new Date(data.endDate + 'T23:59:59').toISOString() : undefined,
-          registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline + 'T23:59:59').toISOString() : undefined,
+          startDate: data.startDate ? formatDateForAPI(data.startDate) : undefined,
+          endDate: data.endDate ? formatDateForAPI(data.endDate) : undefined,
+          registrationDeadline: data.registrationDeadline ? formatDateForAPI(data.registrationDeadline) : undefined,
           maxParticipants: data.maxParticipants ? parseInt(data.maxParticipants) : undefined
         })
       })
@@ -98,13 +108,23 @@ export function RaceEditForm({ raceId }: RaceEditFormProps) {
 
   useEffect(() => {
     if (race) {
+      const formatDateForInput = (dateString: string) => {
+        try {
+          const date = new Date(dateString)
+          if (isNaN(date.getTime())) return ''
+          return date.toISOString().slice(0, 16)
+        } catch {
+          return ''
+        }
+      }
+
       setFormData({
         name: race.name || '',
         description: race.description || '',
         location: race.location || '',
-        startDate: race.startDate ? new Date(race.startDate).toISOString().slice(0, 16) : '',
-        endDate: race.endDate ? new Date(race.endDate).toISOString().slice(0, 16) : '',
-        registrationDeadline: race.registrationDeadline ? new Date(race.registrationDeadline).toISOString().slice(0, 16) : '',
+        startDate: formatDateForInput(race.startDate),
+        endDate: formatDateForInput(race.endDate),
+        registrationDeadline: formatDateForInput(race.registrationDeadline),
         maxParticipants: race.maxParticipants?.toString() || '',
         status: race.status || 'upcoming'
       })
