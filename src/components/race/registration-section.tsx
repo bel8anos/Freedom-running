@@ -156,7 +156,9 @@ export function RegistrationSection({ race }: RegistrationSectionProps) {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Registration failed. Please try again.
+                {registerMutation.error instanceof Error
+                  ? registerMutation.error.message
+                  : 'Registration failed. Please try again.'}
               </AlertDescription>
             </Alert>
           )}

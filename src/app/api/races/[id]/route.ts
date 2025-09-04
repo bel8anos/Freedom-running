@@ -22,6 +22,7 @@ export async function GET(
 ) {
   try {
     await dbConnect()
+    const session = await getSession()
     
     const race = await RaceModel.findById(params.id)
       .populate('createdBy', 'name email')
@@ -36,9 +37,19 @@ export async function GET(
       status: 'approved'
     })
 
+    // If a user is signed in, include their registration for this race
+    let userRegistration = null as any
+    if (session?.user) {
+      userRegistration = await RegistrationModel.findOne({
+        raceId: params.id,
+        userId: session.user.id,
+      }).lean()
+    }
+
     const raceWithCount = {
       ...race,
-      registrationCount
+      registrationCount,
+      userRegistration
     }
 
     return NextResponse.json(raceWithCount)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -67,6 +68,29 @@ export function UserProfile() {
   }
 
   const recentRaces = []
+
+  // Fetch current user's registrations for "My Registrations" list
+  type RegistrationItem = {
+    _id: string
+    registeredAt: string
+    status: 'pending' | 'approved' | 'rejected'
+    raceId: {
+      _id: string
+      name: string
+      location: string
+      startDate: string
+    }
+  }
+
+  const { data: myRegistrations = [], isLoading: isRegLoading } = useQuery<RegistrationItem[]>({
+    queryKey: ['my-registrations'],
+    queryFn: async () => {
+      const res = await fetch('/api/registrations')
+      if (!res.ok) throw new Error('Failed to fetch registrations')
+      return res.json()
+    },
+    enabled: Boolean(session?.user?.id),
+  })
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -221,6 +245,50 @@ export function UserProfile() {
                         </div>
                       </div>
                       <Badge>{race.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* My Registrations */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Trophy className="h-5 w-5" />
+                <span>My Registrations</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isRegLoading ? (
+                <div className="py-8 text-center">
+                  Loading registrations...
+                </div>
+              ) : myRegistrations.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  You haven't registered for any races yet.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {myRegistrations.map((reg) => (
+                    <div key={reg._id} className="flex items-center justify-between border-b pb-4 last:border-b-0 last:pb-0">
+                      <div className="space-y-1">
+                        <p className="font-medium">{reg.raceId.name}</p>
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="h-3 w-3" />
+                            <span>{reg.raceId.location}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{new Date(reg.raceId.startDate).toDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant={reg.status === 'approved' ? 'default' : 'secondary'}>
+                        {reg.status.charAt(0).toUpperCase() + reg.status.slice(1)}
+                      </Badge>
                     </div>
                   ))}
                 </div>

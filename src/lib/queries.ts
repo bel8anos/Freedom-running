@@ -153,6 +153,8 @@ export const useRegisterForRace = () => {
     onSuccess: (_, raceId) => {
       queryClient.invalidateQueries({ queryKey: raceQueries.detail(raceId) })
       queryClient.invalidateQueries({ queryKey: registrationQueries.all() })
+      // Refresh profile page list
+      queryClient.invalidateQueries({ queryKey: ['my-registrations'] })
     },
   })
 }
