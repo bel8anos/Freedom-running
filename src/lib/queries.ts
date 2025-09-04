@@ -73,7 +73,26 @@ async function registerForRace(raceId: string): Promise<Registration> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ raceId }),
   })
-  if (!response.ok) throw new Error('Failed to register for race')
+  if (!response.ok) {
+    let errorMessage = `Failed to register for race (HTTP ${response.status})`
+    try {
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const data = await response.json() as any
+        if (typeof data?.error === 'string') {
+          errorMessage = data.error
+        } else if (Array.isArray(data?.error) && data.error[0]?.message) {
+          errorMessage = data.error[0].message
+        }
+      } else {
+        const text = await response.text()
+        if (text) errorMessage = `${errorMessage}: ${text.substring(0, 200)}`
+      }
+    } catch (e) {
+      // ignore parse failures; keep the default errorMessage
+    }
+    throw new Error(errorMessage)
+  }
   return response.json()
 }
 

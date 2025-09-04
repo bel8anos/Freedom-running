@@ -20,14 +20,23 @@ export async function GET(request: NextRequest) {
     await dbConnect()
     
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId') || session.user.id
+    const requestedUserId = searchParams.get('userId')
     const raceId = searchParams.get('raceId')
 
     const filter: any = {}
     if (raceId) filter.raceId = raceId
-    if (userId) filter.userId = userId
 
-    if (session.user.role !== 'admin' && userId !== session.user.id) {
+    // Non-admins can only see their own registrations; admins can filter by userId if provided
+    if (session.user.role !== 'admin') {
+      filter.userId = requestedUserId || session.user.id
+      if (requestedUserId && requestedUserId !== session.user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    } else if (requestedUserId) {
+      filter.userId = requestedUserId
+    }
+
+    if (session.user.role !== 'admin' && filter.userId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
