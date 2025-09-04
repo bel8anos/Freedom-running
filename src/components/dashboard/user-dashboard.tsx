@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, Trophy, Clock, User, Target, Award, TrendingUp } from 'lucide-react'
 import { useRaces } from '@/lib/queries'
+import { useQuery } from '@tanstack/react-query'
 import { LoadingSpinner } from '@/components/common/loading-spinner'
 import { format } from 'date-fns'
 
@@ -14,14 +15,36 @@ export function UserDashboard() {
   const { data: session } = useAuth()
   const { data: races, isLoading } = useRaces()
 
-  // Mock user registrations and stats - in real app, fetch from API
-  const userRegistrations = []
+  // Fetch signed-in user's registrations for dashboard
+  type RegistrationItem = {
+    _id: string
+    status: 'pending' | 'approved' | 'rejected'
+    registeredAt: string
+    raceId: {
+      _id: string
+      name: string
+      location: string
+      startDate: string
+    }
+  }
+
+  const { data: myRegs = [], isLoading: regsLoading } = useQuery<RegistrationItem[]>({
+    queryKey: ['my-registrations'],
+    queryFn: async () => {
+      const res = await fetch('/api/registrations')
+      if (!res.ok) throw new Error('Failed to fetch registrations')
+      return res.json()
+    },
+    enabled: true,
+  })
+
+  const userRegistrations = myRegs
   const userStats = {
-    totalRaces: 0,
+    totalRaces: myRegs.length,
     completedRaces: 0,
-    upcomingRaces: 0,
-    bestTime: null,
-    avgPosition: null
+    upcomingRaces: myRegs.filter(r => new Date(r.raceId.startDate) > new Date()).length,
+    bestTime: null as number | null,
+    avgPosition: null as number | null,
   }
 
   const featuredRaces = races?.filter(race => 
@@ -122,7 +145,11 @@ export function UserDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {userRegistrations.length === 0 ? (
+            {regsLoading ? (
+              <div className="py-8 text-center">
+                <LoadingSpinner />
+              </div>
+            ) : userRegistrations.length === 0 ? (
               <div className="py-8 text-center">
                 <Award className="mx-auto h-12 w-12 text-muted-foreground/50" />
                 <h3 className="mt-4 text-lg font-semibold">No races yet</h3>
@@ -135,12 +162,12 @@ export function UserDashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {userRegistrations.map((registration: any) => (
+                {userRegistrations.map((registration: RegistrationItem) => (
                   <div key={registration._id} className="flex items-center justify-between border-b pb-4 last:border-b-0 last:pb-0">
                     <div className="space-y-1">
-                      <p className="font-medium leading-none">{registration.race.name}</p>
+                      <p className="font-medium leading-none">{registration.raceId.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {registration.race.location} • {format(new Date(registration.race.startDate), 'MMM dd, yyyy')}
+                        {registration.raceId.location} • {format(new Date(registration.raceId.startDate), 'MMM dd, yyyy')}
                       </p>
                     </div>
                     <Badge variant={
@@ -227,31 +254,26 @@ export function UserDashboard() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Button variant="outline" className="justify-start" asChild>
+          <div className="grid gap-4 sm:grid-cols-3 justify-items-center">
+            <Button variant="outline" className="justify-center w-full sm:w-auto" asChild>
               <Link href="/races">
                 <Calendar className="mr-2 h-4 w-4" />
                 Browse All Races
               </Link>
             </Button>
-            <Button variant="outline" className="justify-start" asChild>
+            <Button variant="outline" className="justify-center w-full sm:w-auto" asChild>
               <Link href="/profile">
                 <User className="mr-2 h-4 w-4" />
                 Edit Profile
               </Link>
             </Button>
-            <Button variant="outline" className="justify-start" asChild>
+            <Button variant="outline" className="justify-center w-full sm:w-auto" asChild>
               <Link href="/races?status=registration_open">
                 <Target className="mr-2 h-4 w-4" />
                 Open Registrations
               </Link>
             </Button>
-            <Button variant="outline" className="justify-start" asChild>
-              <Link href="/help">
-                <Trophy className="mr-2 h-4 w-4" />
-                Race Guidelines
-              </Link>
-            </Button>
+            
           </div>
         </CardContent>
       </Card>
